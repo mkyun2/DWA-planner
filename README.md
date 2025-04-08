@@ -10,7 +10,7 @@ C++ simulation of differential drive robot using the Dynamic Window Approach
 ![simulate.gif](figure/simulate.gif)
 
 ## Usage
-###Test Environment
+### Test Environment
  - C++17 compiler (GCC)
  - Cmake 3.10
  - Python3 (matplotlib and pandas libraries needed for visualization)
