@@ -15,7 +15,7 @@ C++ simulation of differential drive robot using the Dynamic Window Approach
  - Cmake 3.10
  - Python3 (matplotlib and pandas libraries needed for visualization)
 ### Build & Run
-'''bash
+```bash
 git clone https://github.com/mkyun2/DWA-planner.git
 cd DWA-planner
 mkdir build & cd build
