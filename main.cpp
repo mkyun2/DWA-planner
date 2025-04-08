@@ -24,8 +24,8 @@ int main()
     double sim_time = 5.0;
     int steps = static_cast<int>(sim_time/dt);
     position goal;
-    goal.x = 0.0;
-    goal.y = 0.0;
+    goal.x = 1.0;
+    goal.y = 1.0;
 
     std::vector<position> obstacles;
     obstacles.push_back({0.3, 0.3, 0.0});

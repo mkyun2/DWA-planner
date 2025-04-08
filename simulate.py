@@ -72,5 +72,5 @@ ani = FuncAnimation(fig, update,
                     init_func=init,
                     interval=1,   # ms, 각 프레임 간 간격
                     blit=False)
-#ani.save("simulation3.gif", writer='pillow', fps=60)
-plt.show()
+ani.save("simulation3.gif", writer='pillow', fps=100)
+#plt.show()
