@@ -7,7 +7,7 @@ C++ simulation of differential drive robot using the Dynamic Window Approach
  - MotionController ( P Controller )
  - Example for Simulration
 ## Preview
-![simulate.gif](docs/simulate.gif)
+![simulate.gif](figure/simulate.gif)
 
 ## Usage
 ###Test Environment
