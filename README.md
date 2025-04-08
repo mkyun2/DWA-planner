@@ -1,7 +1,7 @@
 # DWA-planner
 
 C++ simulation of differential drive robot using the Dynamic Window Approach
-
+![motion_planner.png](figure/motion_planner.png)
 ## Included
  - MotionPlanner ( Trajectory Generator, Trajectory Evaluator )
  - MotionController ( P Controller )
