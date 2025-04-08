@@ -1,3 +1,4 @@
+[![cpp ci](https://github.com/mkyun2/DWA-planner/actions/workflows/build.yml/badge.svg)](https://github.com/mkyun2/DWA-planner/actions/workflows/build.yml)
 # DWA-planner
 
 C++ simulation of differential drive robot using the Dynamic Window Approach
