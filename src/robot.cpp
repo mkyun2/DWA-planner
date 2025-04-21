@@ -1,6 +1,8 @@
 #include "robot.hpp"
 #include <cmath>
 
+const double PI = acos(-1);
+
 Robot::Robot(double x, double y, double yaw,
     double wheel_radius, double wheel_separation)
     :x_(x), y_(y), yaw_(yaw), wheel_radius_(wheel_radius),
@@ -55,8 +57,8 @@ void Robot::update(double dt)
     y_ += vel_x_ * std::sin(yaw_) * dt;
     yaw_ += yaw_rate_ * dt;
 
-    if(yaw_ > M_PI) 
-        yaw_ -= 2.0*M_PI;
-    else if(yaw_ < -M_PI)
-        yaw_ += 2.0*M_PI;
+    if(yaw_ > PI) 
+        yaw_ -= 2.0*PI;
+    else if(yaw_ < -PI)
+        yaw_ += 2.0*PI;
 }

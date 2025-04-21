@@ -3,8 +3,8 @@
 #include <iostream>
 #include "motion_planner.hpp"
 
-TrajectoryGenerator::TrajectoryGenerator(double dt, double simulation_time, double linear_vel_max, double linear_vel_min, double linear_acc_max, double angular_vel_max, double angular_acc_max)
-:dt_(dt), simulation_time_(simulation_time), linear_vel_max_(linear_vel_max), linear_vel_min_(linear_vel_min), linear_acc_max_(linear_acc_max), angular_vel_max_(angular_vel_max), angular_acc_max_(angular_acc_max)
+TrajectoryGenerator::TrajectoryGenerator(double dt, double simulation_time, int vel_sample_num, double linear_vel_max, double linear_vel_min, double linear_acc_max, double angular_vel_max, double angular_acc_max)
+:dt_(dt), simulation_time_(simulation_time), sample_num_(vel_sample_num), linear_vel_max_(linear_vel_max), linear_vel_min_(linear_vel_min), linear_acc_max_(linear_acc_max), angular_vel_max_(angular_vel_max), angular_acc_max_(angular_acc_max)
 {    
 }
 // std::pair<double, double> MotionPlanner::getVelocityCommand()
@@ -16,7 +16,7 @@ TrajectoryGenerator::TrajectoryGenerator(double dt, double simulation_time, doub
 //     return std::make_pair(v_d,w_d);
 // }
 
-std::vector<std::pair<std::vector<position>,velocity>> TrajectoryGenerator::generateTrajectories(position current_pos, velocity current_vel)
+trajectories TrajectoryGenerator::generateTrajectories(position current_pos, velocity current_vel)
 {
     std::vector<velocity> velocities;
     velocities = sampleVelocity();
@@ -24,24 +24,25 @@ std::vector<std::pair<std::vector<position>,velocity>> TrajectoryGenerator::gene
     int steps = simulation_time_ / dt_;
     
     
-    std::vector<std::pair<std::vector<position>,velocity>> trajectories;
+    trajectories gen_trajectories;
     for(auto vel : velocities)
     {
-        std::vector<position> trajectory;
+        trajectory gen_trajectory;
         position simulated_pos = current_pos;
-        trajectory.push_back(current_pos);
+        gen_trajectory.first.push_back(current_pos);
         for(int step = 0; step<steps; step++)
         {
             simulated_pos.x +=  vel.x * cosf(simulated_pos.yaw) * dt_;
             simulated_pos.y +=  vel.x * sinf(simulated_pos.yaw) * dt_;
             simulated_pos.yaw +=  vel.yaw * dt_;
             
-            trajectory.push_back(simulated_pos);   
+            gen_trajectory.first.push_back(simulated_pos);   
         }
-        trajectories.push_back(std::make_pair(trajectory, vel));
+        gen_trajectory.second = vel;
+        gen_trajectories.push_back(gen_trajectory);
     }
 
-    return trajectories;
+    return gen_trajectories;
 }
 
 std::vector<velocity> TrajectoryGenerator::sampleVelocity()
@@ -52,16 +53,20 @@ std::vector<velocity> TrajectoryGenerator::sampleVelocity()
     // std::uniform_real_distribution<double> angular_vel_sample(-angular_vel_max_, angular_vel_max_);
     std::vector<velocity> velocities;
     velocity sampled_velocity = {0.0, 0.0, 0.0};
-    int sample_num = 30;
+    
     double linvel_sample_range = (linear_vel_max_ - linear_vel_min_);
     double angvel_sample_range = (2.0 * angular_vel_max_);
-    double dv = linvel_sample_range/static_cast<double>(sample_num);
-    double dw = angvel_sample_range/static_cast<double>(sample_num);
-    for(int i = 0; i < sample_num; i++ )
+    double dv = linvel_sample_range/static_cast<double>(sample_num_);
+    double dw = angvel_sample_range/static_cast<double>(sample_num_);
+    
+    sampled_velocity.x = linear_vel_min_;
+    
+    for(int i = 0; i < sample_num_; i++ )
     {
         sampled_velocity.x += dv;
         sampled_velocity.yaw = -angular_vel_max_;
-        for(int j = 0; j < sample_num; j++)
+        //sampled_velocity.x = std::min(sampled_velocity.x, linear_vel_max_);
+        for(int j = 0; j < sample_num_; j++)
         {
             sampled_velocity.yaw += dw;
             velocities.push_back(sampled_velocity);
@@ -80,19 +85,28 @@ void TrajectoryGenerator::removeUnrechableVelocity(std::vector<velocity> & veloc
     std::cout << "sampledVelocity size " << velocities.size() << std::endl;
     std::cout << "currentVelocity:[" << current_vel.x << ", " << current_vel.yaw << "]" << std::endl;
     std::cout << "dynamicWindow linear:["<< lin_vel_min << "~" << lin_vel_max << "], angular[" << ang_vel_min << "~" << ang_vel_max << "]" <<std::endl; 
+    double epsilon = 0.00001;
+    
     for(auto it = velocities.begin(); it != velocities.end();)
     {
         bool erase_sign = false;
-        if(it->x > lin_vel_max || it->x < lin_vel_min)
+        if((it->x - epsilon) > lin_vel_max || (it->x + epsilon) < lin_vel_min)
             erase_sign = true;
-        if(it->yaw > ang_vel_max || it->yaw < ang_vel_min)
+        if((it->yaw - epsilon) > ang_vel_max || (it->yaw + epsilon) < ang_vel_min)
             erase_sign = true;
         if(erase_sign)
+        {
             it = velocities.erase(it);
+        }
         else
             ++it;
     }
     std::cout << "Velocity size after erasing " << velocities.size() << std::endl;
+}
+
+void TrajectoryGenerator::setNumOfVelocitySample(int sample_num)
+{
+    sample_num_ = sample_num;
 }
 
 TrajectoryEvaluator::TrajectoryEvaluator(const position pos, const velocity vel, const position goal)
@@ -103,7 +117,7 @@ TrajectoryEvaluator::TrajectoryEvaluator(const position pos, const velocity vel,
     penalty_obstacle_ = 0.1;
     max_speed_ = 1.0;
 }
-std::pair<std::vector<position>,velocity> TrajectoryEvaluator::evaluateTrajectories(const std::vector<std::pair<std::vector<position>,velocity>> & trajecories, const std::vector<position> & obstacles)
+std::pair<std::vector<position>,velocity> TrajectoryEvaluator::evaluateTrajectories(const trajectories & trajecories, const std::vector<position> & obstacles)
 {
     std::vector<double> traj_cost;
     double best_cost = std::numeric_limits<double>::max();

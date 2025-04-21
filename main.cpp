@@ -17,8 +17,10 @@ int main()
     double angular_vel_max = 0.6;
     double linear_acc_max = 2.0;
     double angular_acc_max = 2.5;
+
+    int vel_sample_num = 30;
     Robot robot(0.0, 0.0, 0.0, wheel_radius, wheel_separation);
-    TrajectoryGenerator traj_gen(traj_gen_dt, traj_gen_time, linear_vel_max, linear_vel_min, linear_acc_max, angular_vel_max, angular_acc_max);
+    TrajectoryGenerator traj_gen(traj_gen_dt, traj_gen_time, vel_sample_num, linear_vel_max, linear_vel_min, linear_acc_max, angular_vel_max, angular_acc_max);
     MotionController controller(wheel_radius, wheel_separation);
     double dt = 0.01;
     double sim_time = 5.0;
@@ -45,7 +47,7 @@ int main()
     fout << "time_step,step_idx,x,y,cur_x,cur_y\n";
     for(int i = 0; i<steps; ++i)
     {
-        std::vector<std::pair<std::vector<position>, velocity>> trajectories;
+        trajectories trajs;
         position cur_pos;
         velocity cur_vel;
         double t = i*dt;
@@ -58,9 +60,9 @@ int main()
         cur_vel.x = robot.getVelX();
         cur_vel.yaw = robot.getYawRate();
         
-        trajectories = traj_gen.generateTrajectories(cur_pos, cur_vel);
+        trajs = traj_gen.generateTrajectories(cur_pos, cur_vel);
         TrajectoryEvaluator traj_eval(cur_pos, cur_vel, goal);
-        auto [traj_, vel_] = traj_eval.evaluateTrajectories(trajectories, obstacles);
+        auto [traj_, vel_] = traj_eval.evaluateTrajectories(trajs, obstacles);
         //auto [v_d, w_d] = planner.getVelocityCommand();
         double wl_measure = robot.getWheelSpeedLeft();
         double wr_measure = robot.getWheelSpeedRight();
